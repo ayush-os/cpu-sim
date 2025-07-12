@@ -41,8 +41,11 @@ public:
   void execSLTI(const Instr& instr);
   void execXORI(const Instr& instr);
   void execORI(const Instr& instr);
+
+  void execSRLAI(const Instr& instr);
   void execSRLI(const Instr& instr);
   void execSRAI(const Instr& instr);
+
   void execSLTIU(const Instr& instr);
   void execANDI(const Instr& instr);
 
@@ -69,6 +72,7 @@ public:
   void execJAL(const Instr& instr);
   void execJALR(const Instr& instr);
 
+  void execE(const Instr& instr);
   void execECALL(const Instr& instr);
   void execEBREAK(const Instr& instr);
 };

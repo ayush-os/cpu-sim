@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-#include "tests.cpp"
-
 const int NUM_REGS = 32;
 const int MEM_SIZE = 16 * 1024 * 1024;  // 1024 bytes = 1 kb -> 1024 KB = 1 MB -> 16 * 1 MB = 16 MB
 
@@ -52,8 +50,7 @@ std::unordered_map<uint32_t, ExecFunc> instruction_map = {
     {0x13002000, &CPU::execSLTI},
     {0x13003000, &CPU::execSLTIU},
     {0x13004000, &CPU::execXORI},
-    {0x13005000, &CPU::execSRLI},
-    {0x13005020, &CPU::execSRAI},
+    {0x13005000, &CPU::execSRLAI},
     {0x13006000, &CPU::execORI},
     {0x13007000, &CPU::execANDI},
     {0x03004000, &CPU::execLBU},
@@ -86,8 +83,7 @@ std::unordered_map<uint32_t, ExecFunc> instruction_map = {
     {0x67000000, &CPU::execJALR},
 
     // SYS
-    {0x73000000, &CPU::execECALL},
-    {0x73000001, &CPU::execEBREAK},
+    {0x73000000, &CPU::execE},
 };
 
 CPU::CPU()
@@ -95,13 +91,13 @@ CPU::CPU()
       regs(std::make_unique<uint32_t[]>(NUM_REGS)),
       mem(std::make_unique<unsigned char[]>(MEM_SIZE)) {
   mem.get()[3] = 0x00;
-  mem.get()[2] = 0x00;
-  mem.get()[1] = 0x82;
-  mem.get()[0] = 0x03;
+  mem.get()[2] = 0x10;
+  mem.get()[1] = 0x00;
+  mem.get()[0] = 0x73;
 
   // regs[0] = 4;
-  regs[1] = 0x00100004;
-  mem.get()[0x00100004] = 0x80;
+  // regs[1] = 0x00100004;
+  // mem.get()[0x00100004] = 0x80;
 }
 
 uint32_t makeInstrKey(const uint32_t& instr) {
@@ -110,9 +106,9 @@ uint32_t makeInstrKey(const uint32_t& instr) {
   uint8_t funct7 = (instr >> FUNCT7_SHIFT) & FUNCT7_MASK;
 
   if (opcode == RTYPE_OPCODE) {
-    return (opcode << 16) | (funct3 << 12) | (funct7 << 0);
+    return (opcode << 24) | (funct3 << 12) | (funct7 << 0);
   } else {
-    return (opcode << 16) | (funct3 << 12);
+    return (opcode << 24) | (funct3 << 12);
   }
 }
 
@@ -202,6 +198,8 @@ void CPU::execSLTIU(const Instr& instr) {
       = (static_cast<uint32_t>(regs[instr.rs1]) < static_cast<uint32_t>(instr.imm)) ? 1 : 0;
 }
 
+void CPU::execSRLAI(const Instr& instr) { (instr.funct7) ? execSRAI(instr) : execSRLI(instr); }
+
 void CPU::execSRLI(const Instr& instr) {
   regs[instr.rd] = regs[instr.rs1] >> (instr.imm & REG_MASK);
 }
@@ -247,5 +245,6 @@ void CPU::execAUIPC(const Instr& instr) { regs[instr.rd] = pc + (instr.imm << 12
 void CPU::execJAL(const Instr& instr) { std::cout << "JAL" << std::endl; }
 void CPU::execJALR(const Instr& instr) { std::cout << "JALR" << std::endl; }
 
+void CPU::execE(const Instr& instr) { (instr.rs2) ? execEBREAK(instr) : execECALL(instr); }
 void CPU::execECALL(const Instr& instr) { std::cout << "ECALL" << std::endl; }
 void CPU::execEBREAK(const Instr& instr) { std::cout << "EBREAK" << std::endl; }
