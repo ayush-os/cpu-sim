@@ -2,8 +2,6 @@
 #include <cstdint>
 #include <memory>
 
-const int NUM_BITS = 32;
-
 struct Instr {
   uint8_t rs1;
   uint8_t rs2;
@@ -15,10 +13,8 @@ struct Instr {
 };
 
 class CPU {
-  // TODO update accessibility of fns and vars
 public:
   uint32_t pc;
-  // TODO: Block write ops on x0
   std::unique_ptr<uint32_t[]> regs;
   std::unique_ptr<unsigned char[]> mem;  // 16 MB: 0x000000 to 0xFFFFFF
 
@@ -28,17 +24,6 @@ public:
   };
 
   void decode(const uint32_t& instr);
-  // TODO maybe turn these into a namespace?
-  void decodeR(const uint32_t& instr);
-  void decodeI1(const uint32_t& instr);
-  void decodeI2(const uint32_t& instr);
-  void decodeI3(const uint32_t& instr);
-  void decodeS(const uint32_t& instr);
-  void decodeB(const uint32_t& instr);
-  void decodeU1(const uint32_t& instr);
-  void decodeU2(const uint32_t& instr);
-  void decodeJ(const uint32_t& instr);
-  void decodeSYS(const uint32_t& instr);
 
   void execSLL(const Instr& instr);
   void execSLT(const Instr& instr);
@@ -67,23 +52,23 @@ public:
   void execLBU(const Instr& instr);
   void execLHU(const Instr& instr);
 
-  void decodeSB(const uint32_t& instr);
-  void decodeSH(const uint32_t& instr);
-  void decodeSW(const uint32_t& instr);
+  void execSB(const Instr& instr);
+  void execSH(const Instr& instr);
+  void execSW(const Instr& instr);
 
-  void decodeBEQ(const uint32_t& instr);
-  void decodeBNE(const uint32_t& instr);
-  void decodeBLT(const uint32_t& instr);
-  void decodeBGE(const uint32_t& instr);
-  void decodeBLTU(const uint32_t& instr);
-  void decodeBGEU(const uint32_t& instr);
+  void execBEQ(const Instr& instr);
+  void execBNE(const Instr& instr);
+  void execBLT(const Instr& instr);
+  void execBGE(const Instr& instr);
+  void execBLTU(const Instr& instr);
+  void execBGEU(const Instr& instr);
 
   void execLUI(const Instr& instr);
   void execAUIPC(const Instr& instr);
 
-  void decodeJAL(const uint32_t& instr);
-  void decodeJALR(const uint32_t& instr);
+  void execJAL(const Instr& instr);
+  void execJALR(const Instr& instr);
 
-  void decodeECALL(const uint32_t& instr);
-  void decodeEBREAK(const uint32_t& instr);
+  void execECALL(const Instr& instr);
+  void execEBREAK(const Instr& instr);
 };

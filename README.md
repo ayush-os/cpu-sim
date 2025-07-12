@@ -4,3 +4,4 @@ Single-Cycle CPU Simulator (RISC-V RV32I)
 - [ ] Block write ops on reg x0
 - [ ] Implement non-core instructions (fence, etc)
 - [ ] Add PC update on exec functions
+- [ ] S-TYPE OFFSET EXTRACTION
