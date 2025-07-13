@@ -17,6 +17,7 @@ const uint8_t ITYPE_OPCODE2 = 0x3;
 const uint8_t STYPE_OPCODE = 0x23;
 const uint8_t UTYPE_OPCODE1 = 0x37;
 const uint8_t UTYPE_OPCODE2 = 0x17;
+const uint8_t BTYPE_OPCODE = 0x63;
 
 const uint8_t REG_MASK = 0x1F;
 
@@ -32,7 +33,14 @@ const int HALF_MASK = 0xFFFF;
 const uint8_t O1_SHIFT = 25;
 const uint8_t O2_SHIFT = 7;
 const uint8_t O2_MASK = 0x1f;
-const uint8_t SIGN_EXT_12_BIT = 20;
+const uint8_t DIFF_32_12 = 20;
+const uint8_t DIFF_32_13 = 19;
+const uint8_t O3_SHIFT = 4;
+
+const int B_O1_MASK = 0x80000000;
+const int B_O2_MASK = 0x00000080;
+const int B_O3_MASK = 0x7E000000;
+const int B_O4_MASK = 0x00000F00;
 
 using ExecFunc = void (CPU::*)(const Instr&);
 
@@ -95,15 +103,13 @@ CPU::CPU()
     : pc(0),
       regs(std::make_unique<uint32_t[]>(NUM_REGS)),
       mem(std::make_unique<unsigned char[]>(MEM_SIZE)) {
-  mem.get()[3] = 0x80;
-  mem.get()[2] = 0x00;
-  mem.get()[1] = 0xd9;
-  mem.get()[0] = 0x03;
+  mem.get()[3] = 0x00;
+  mem.get()[2] = 0x20;
+  mem.get()[1] = 0xE6;
+  mem.get()[0] = 0x63;
 
-  regs[1] = 0x00601000;
-
-  mem.get()[0x00601000 - 2047] = 0xBA;
-  mem.get()[0x00601000 - 2048] = 0xBE;
+  regs[1] = 0x80000000;
+  regs[2] = 0x7FFFFFFF;
 }
 
 uint32_t makeInstrKey(const uint32_t& instr) {
@@ -134,7 +140,11 @@ Instr extractFields(const uint32_t& instr) {
     i.imm = static_cast<int32_t>(instr) >> CONST_SHIFT_2;
   } else if (opcode == STYPE_OPCODE) {
     i.imm = ((instr >> O1_SHIFT) << 5) | ((instr >> O2_SHIFT) & O2_MASK);
-    i.imm = static_cast<int32_t>(i.imm << SIGN_EXT_12_BIT) >> SIGN_EXT_12_BIT;
+    i.imm = static_cast<int32_t>(i.imm << DIFF_32_12) >> DIFF_32_12;
+  } else if (opcode == BTYPE_OPCODE) {
+    i.imm = ((instr & B_O1_MASK) >> DIFF_32_13) | ((instr & B_O2_MASK) << O3_SHIFT)
+            | ((instr & B_O3_MASK) >> DIFF_32_12) | ((instr & B_O4_MASK) >> O2_SHIFT);
+    i.imm = static_cast<int32_t>(i.imm << DIFF_32_13) >> DIFF_32_13;
   }
 
   return i;
@@ -256,12 +266,28 @@ void CPU::execSW(const Instr& instr) {
   *reinterpret_cast<uint32_t*>(mem.get() + addr) = regs[instr.rs2];
 }
 
-void CPU::execBEQ(const Instr& instr) { std::cout << "BEQ" << std::endl; }
-void CPU::execBNE(const Instr& instr) { std::cout << "BNE" << std::endl; }
-void CPU::execBLT(const Instr& instr) { std::cout << "BLT" << std::endl; }
-void CPU::execBGE(const Instr& instr) { std::cout << "BGE" << std::endl; }
-void CPU::execBLTU(const Instr& instr) { std::cout << "BLTU" << std::endl; }
-void CPU::execBGEU(const Instr& instr) { std::cout << "BGEU" << std::endl; }
+void CPU::execBEQ(const Instr& instr) {
+  if (regs[instr.rs1] == regs[instr.rs2]) pc += instr.imm;
+}
+
+void CPU::execBNE(const Instr& instr) {
+  if (regs[instr.rs1] != regs[instr.rs2]) pc += instr.imm;
+}
+
+void CPU::execBLT(const Instr& instr) {
+  if (static_cast<int32_t>(regs[instr.rs1]) < static_cast<int32_t>(regs[instr.rs2]))
+    pc += instr.imm;
+}
+void CPU::execBGE(const Instr& instr) {
+  if (static_cast<int32_t>(regs[instr.rs1]) >= static_cast<int32_t>(regs[instr.rs2]))
+    pc += instr.imm;
+}
+void CPU::execBLTU(const Instr& instr) {
+  if (regs[instr.rs1] < regs[instr.rs2]) pc += instr.imm;
+}
+void CPU::execBGEU(const Instr& instr) {
+  if (regs[instr.rs1] >= regs[instr.rs2]) pc += instr.imm;
+}
 
 void CPU::execLUI(const Instr& instr) { regs[instr.rd] = instr.imm << 12; }
 void CPU::execAUIPC(const Instr& instr) { regs[instr.rd] = pc + (instr.imm << 12); }
