@@ -26,8 +26,8 @@ const uint8_t RD_SHIFT = 7;
 const uint8_t RS1_SHIFT = 15;
 const uint8_t RS2_SHIFT = 20;
 
-const uint8_t LB_MASK = 0xFF;
-const int LH_MASK = 0xFFFF;
+const uint8_t BYTE_MASK = 0xFF;
+const int HALF_MASK = 0xFFFF;
 
 using ExecFunc = void (CPU::*)(const Instr&);
 
@@ -90,17 +90,18 @@ CPU::CPU()
     : pc(0),
       regs(std::make_unique<uint32_t[]>(NUM_REGS)),
       mem(std::make_unique<unsigned char[]>(MEM_SIZE)) {
-  mem.get()[3] = 0x00;
-  mem.get()[2] = 0x00;
-  mem.get()[1] = 0x82;
+  mem.get()[3] = 0xFF;
+  mem.get()[2] = 0xE0;
+  mem.get()[1] = 0x98;
   mem.get()[0] = 0x83;
 
-  regs[1] = 0x00100004;
+  // regs[1] = 0x0;
+  regs[1] = 0x00200020;
 
-  // mem.get()[0x400803] = 0xFF;
-  // mem.get()[0x400802] = 0xFF;
-  // mem.get()[0x400801] = 0xFF;
-  mem.get()[0x00100004] = 0x80;
+  mem.get()[0x200021] = 0xFF;
+  mem.get()[0x200020] = 0xFF;
+  mem.get()[0x20001F] = 0xDE;
+  mem.get()[0x20001E] = 0xAD;
 }
 
 uint32_t makeInstrKey(const uint32_t& instr) {
@@ -207,19 +208,16 @@ void CPU::execSRAI(const Instr& instr) {
   regs[instr.rd] = static_cast<int32_t>(regs[instr.rs1]) >> (instr.imm & REG_MASK);
 }
 
-// BUGGY AND UNTESTED
 void CPU::execLB(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   regs[instr.rd]
-      = (int32_t)((int16_t)(*reinterpret_cast<const uint32_t*>(mem.get() + addr) & LB_MASK));
-  std::cout << std::hex << regs[instr.rd] << std::endl;
+      = (int32_t)((int8_t)(*reinterpret_cast<const uint32_t*>(mem.get() + addr) & BYTE_MASK));
 }
 
-// BUGGY AND UNTESTED
 void CPU::execLH(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   regs[instr.rd]
-      = (int32_t)((int16_t)(*reinterpret_cast<const uint32_t*>(mem.get() + addr) & LH_MASK));
+      = (int32_t)((int16_t)(*reinterpret_cast<const uint32_t*>(mem.get() + addr) & HALF_MASK));
 
   std::cout << std::hex << regs[instr.rd] << std::endl;
 }
@@ -232,9 +230,21 @@ void CPU::execLW(const Instr& instr) {
 void CPU::execLBU(const Instr& instr) { std::cout << "LBU" << std::endl; }
 void CPU::execLHU(const Instr& instr) { std::cout << "LHU" << std::endl; }
 
-void CPU::execSB(const Instr& instr) { std::cout << "SB" << std::endl; }
-void CPU::execSH(const Instr& instr) { std::cout << "SH" << std::endl; }
-void CPU::execSW(const Instr& instr) { std::cout << "SW" << std::endl; }
+void CPU::execSB(const Instr& instr) {
+  uint32_t addr = regs[instr.rs1] + instr.imm;
+  *reinterpret_cast<uint32_t*>(mem.get() + addr) = regs[instr.rs2] & BYTE_MASK;
+}
+
+void CPU::execSH(const Instr& instr) {
+  uint32_t addr = regs[instr.rs1] + instr.imm;
+  *reinterpret_cast<uint32_t*>(mem.get() + addr) = regs[instr.rs2] & HALF_MASK;
+}
+
+void CPU::execSW(const Instr& instr) {
+  uint32_t addr = regs[instr.rs1] + instr.imm;
+  *reinterpret_cast<uint32_t*>(mem.get() + addr) = regs[instr.rs2];
+  std::cout << std::hex << *reinterpret_cast<uint32_t*>(mem.get() + 0) << std::endl;
+}
 
 void CPU::execBEQ(const Instr& instr) { std::cout << "BEQ" << std::endl; }
 void CPU::execBNE(const Instr& instr) { std::cout << "BNE" << std::endl; }
