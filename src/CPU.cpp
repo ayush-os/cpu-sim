@@ -29,6 +29,11 @@ const uint8_t RS2_SHIFT = 20;
 const uint8_t BYTE_MASK = 0xFF;
 const int HALF_MASK = 0xFFFF;
 
+const uint8_t O1_SHIFT = 25;
+const uint8_t O2_SHIFT = 7;
+const uint8_t O2_MASK = 0x1f;
+const uint8_t SIGN_EXT_12_BIT = 20;
+
 using ExecFunc = void (CPU::*)(const Instr&);
 
 std::unordered_map<uint32_t, ExecFunc> instruction_map = {
@@ -90,18 +95,13 @@ CPU::CPU()
     : pc(0),
       regs(std::make_unique<uint32_t[]>(NUM_REGS)),
       mem(std::make_unique<unsigned char[]>(MEM_SIZE)) {
-  mem.get()[3] = 0xFF;
-  mem.get()[2] = 0xE0;
-  mem.get()[1] = 0x98;
-  mem.get()[0] = 0x83;
+  mem.get()[3] = 0x80;
+  mem.get()[2] = 0x83;
+  mem.get()[1] = 0xa0;
+  mem.get()[0] = 0x23;
 
-  // regs[1] = 0x0;
-  regs[1] = 0x00200020;
-
-  mem.get()[0x200021] = 0xFF;
-  mem.get()[0x200020] = 0xFF;
-  mem.get()[0x20001F] = 0xDE;
-  mem.get()[0x20001E] = 0xAD;
+  regs[7] = 0x00000800;
+  regs[8] = 0x88888888;
 }
 
 uint32_t makeInstrKey(const uint32_t& instr) {
@@ -130,6 +130,9 @@ Instr extractFields(const uint32_t& instr) {
     i.imm = static_cast<int32_t>(instr) >> CONST_SHIFT_1;
   } else if (opcode == UTYPE_OPCODE1 || opcode == UTYPE_OPCODE2) {
     i.imm = static_cast<int32_t>(instr) >> CONST_SHIFT_2;
+  } else if (opcode == STYPE_OPCODE) {
+    i.imm = ((instr >> O1_SHIFT) << 5) | ((instr >> O2_SHIFT) & O2_MASK);
+    i.imm = static_cast<int32_t>(i.imm << SIGN_EXT_12_BIT) >> SIGN_EXT_12_BIT;
   }
 
   return i;
@@ -174,6 +177,7 @@ void CPU::execSRA(const Instr& instr) {
 void CPU::execSRL(const Instr& instr) {
   regs[instr.rd] = regs[instr.rs1] >> (regs[instr.rs2] & REG_MASK);
 }
+
 void CPU::execADD(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] + regs[instr.rs2]; }
 
 void CPU::execSUB(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] - regs[instr.rs2]; }
@@ -218,8 +222,6 @@ void CPU::execLH(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   regs[instr.rd]
       = (int32_t)((int16_t)(*reinterpret_cast<const uint32_t*>(mem.get() + addr) & HALF_MASK));
-
-  std::cout << std::hex << regs[instr.rd] << std::endl;
 }
 
 void CPU::execLW(const Instr& instr) {
@@ -243,7 +245,6 @@ void CPU::execSH(const Instr& instr) {
 void CPU::execSW(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   *reinterpret_cast<uint32_t*>(mem.get() + addr) = regs[instr.rs2];
-  std::cout << std::hex << *reinterpret_cast<uint32_t*>(mem.get() + 0) << std::endl;
 }
 
 void CPU::execBEQ(const Instr& instr) { std::cout << "BEQ" << std::endl; }
