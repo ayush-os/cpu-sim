@@ -3,8 +3,7 @@
 ---
 
 Core TO-DO
-
-- [ ] Test and implement rest of loads/stores
+- [ ] implement ecall, ebreak
 - [ ] Add PC update on exec functions
 
 ---
