@@ -318,5 +318,18 @@ void CPU::execJALR(const Instr& instr) {
 }
 
 void CPU::execE(const Instr& instr) { (instr.rs2) ? execEBREAK(instr) : execECALL(instr); }
-void CPU::execECALL(const Instr& instr) { std::cout << "ECALL" << std::endl; }
-void CPU::execEBREAK(const Instr& instr) { std::cout << "EBREAK" << std::endl; }
+
+void CPU::execECALL(const Instr& instr) {
+  uint32_t syscall_num = regs[17];
+  switch (syscall_num) {
+    case 93:
+      int exit_code = regs[10];
+      std::cout << "ECALL: Program exited with code " << exit_code << std::endl;
+      exit(0);
+  }
+}
+
+void CPU::execEBREAK(const Instr& instr) {
+  std::cout << "EBREAK encountered at PC: " << pc << std::endl;
+  exit(0);
+}
