@@ -178,133 +178,211 @@ void CPU::decode(const uint32_t& instr) {
 
 void CPU::execSLL(const Instr& instr) {
   regs[instr.rd] = regs[instr.rs1] << (regs[instr.rs2] & REG_MASK);
+  pc += 4;
 }
 
 void CPU::execSLT(const Instr& instr) {
   regs[instr.rd]
       = (static_cast<int32_t>(regs[instr.rs1]) < static_cast<int32_t>(regs[instr.rs2])) ? 1 : 0;
+  pc += 4;
 }
 
 void CPU::execSLTU(const Instr& instr) {
   regs[instr.rd] = (regs[instr.rs1] < regs[instr.rs2]) ? 1 : 0;
+  pc += 4;
 }
 
-void CPU::execXOR(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] ^ regs[instr.rs2]; }
+void CPU::execXOR(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] ^ regs[instr.rs2];
+  pc += 4;
+}
 
-void CPU::execOR(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] | regs[instr.rs2]; }
+void CPU::execOR(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] | regs[instr.rs2];
+  pc += 4;
+}
 
-void CPU::execAND(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] & regs[instr.rs2]; }
+void CPU::execAND(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] & regs[instr.rs2];
+  pc += 4;
+}
 
 void CPU::execSRA(const Instr& instr) {
   regs[instr.rd] = static_cast<uint32_t>(static_cast<int32_t>(regs[instr.rs1])
                                          >> static_cast<int32_t>(regs[instr.rs2] & REG_MASK));
+  pc += 4;
 }
 
 void CPU::execSRL(const Instr& instr) {
   regs[instr.rd] = regs[instr.rs1] >> (regs[instr.rs2] & REG_MASK);
+  pc += 4;
 }
 
-void CPU::execADD(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] + regs[instr.rs2]; }
+void CPU::execADD(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] + regs[instr.rs2];
+  pc += 4;
+}
 
-void CPU::execSUB(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] - regs[instr.rs2]; }
+void CPU::execSUB(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] - regs[instr.rs2];
+  pc += 4;
+}
 
-void CPU::execADDI(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] + instr.imm; }
+void CPU::execADDI(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] + instr.imm;
+  pc += 4;
+}
 
-void CPU::execXORI(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] ^ instr.imm; }
+void CPU::execXORI(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] ^ instr.imm;
+  pc += 4;
+}
 
-void CPU::execORI(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] | instr.imm; }
+void CPU::execORI(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] | instr.imm;
+  pc += 4;
+}
 
-void CPU::execANDI(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] & instr.imm; }
+void CPU::execANDI(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] & instr.imm;
+  pc += 4;
+}
 
-void CPU::execSLLI(const Instr& instr) { regs[instr.rd] = regs[instr.rs1] << instr.imm; }
+void CPU::execSLLI(const Instr& instr) {
+  regs[instr.rd] = regs[instr.rs1] << instr.imm;
+  pc += 4;
+}
 
 void CPU::execSLTI(const Instr& instr) {
   regs[instr.rd]
       = (static_cast<int32_t>(regs[instr.rs1]) < static_cast<int32_t>(instr.imm)) ? 1 : 0;
+  pc += 4;
 }
 
 void CPU::execSLTIU(const Instr& instr) {
   regs[instr.rd]
       = (static_cast<uint32_t>(regs[instr.rs1]) < static_cast<uint32_t>(instr.imm)) ? 1 : 0;
+  pc += 4;
 }
 
-void CPU::execSRLAI(const Instr& instr) { (instr.funct7) ? execSRAI(instr) : execSRLI(instr); }
+void CPU::execSRLAI(const Instr& instr) {
+  (instr.funct7) ? execSRAI(instr) : execSRLI(instr);
+  pc += 4;
+}
 
 void CPU::execSRLI(const Instr& instr) {
   regs[instr.rd] = regs[instr.rs1] >> (instr.imm & REG_MASK);
+  pc += 4;
 }
 
 void CPU::execSRAI(const Instr& instr) {
   regs[instr.rd] = static_cast<int32_t>(regs[instr.rs1]) >> (instr.imm & REG_MASK);
+  pc += 4;
 }
 
 void CPU::execLB(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   regs[instr.rd]
       = (int32_t)((int8_t)(*reinterpret_cast<const uint32_t*>(mem.get() + addr) & BYTE_MASK));
+  pc += 4;
 }
 
 void CPU::execLH(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   regs[instr.rd]
       = (int32_t)((int16_t)(*reinterpret_cast<const uint32_t*>(mem.get() + addr) & HALF_MASK));
+  pc += 4;
 }
 
 void CPU::execLW(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   regs[instr.rd] = *reinterpret_cast<const uint32_t*>(mem.get() + addr);
+  pc += 4;
 }
 
 void CPU::execLBU(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   regs[instr.rd] = *reinterpret_cast<const uint32_t*>(mem.get() + addr) & BYTE_MASK;
+  pc += 4;
 }
 
 void CPU::execLHU(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   regs[instr.rd] = *reinterpret_cast<const uint32_t*>(mem.get() + addr) & HALF_MASK;
+  pc += 4;
 }
 
 void CPU::execSB(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   *reinterpret_cast<uint32_t*>(mem.get() + addr) = regs[instr.rs2] & BYTE_MASK;
+  pc += 4;
 }
 
 void CPU::execSH(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   *reinterpret_cast<uint32_t*>(mem.get() + addr) = regs[instr.rs2] & HALF_MASK;
+  pc += 4;
 }
 
 void CPU::execSW(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
   *reinterpret_cast<uint32_t*>(mem.get() + addr) = regs[instr.rs2];
+  pc += 4;
 }
 
 void CPU::execBEQ(const Instr& instr) {
-  if (regs[instr.rs1] == regs[instr.rs2]) pc += instr.imm;
+  if (regs[instr.rs1] == regs[instr.rs2]) {
+    pc += instr.imm;
+  } else {
+    pc += 4;
+  }
 }
 
 void CPU::execBNE(const Instr& instr) {
-  if (regs[instr.rs1] != regs[instr.rs2]) pc += instr.imm;
+  if (regs[instr.rs1] != regs[instr.rs2]) {
+    pc += instr.imm;
+  } else {
+    pc += 4;
+  }
 }
 
 void CPU::execBLT(const Instr& instr) {
-  if (static_cast<int32_t>(regs[instr.rs1]) < static_cast<int32_t>(regs[instr.rs2]))
+  if (static_cast<int32_t>(regs[instr.rs1]) < static_cast<int32_t>(regs[instr.rs2])) {
     pc += instr.imm;
+  } else {
+    pc += 4;
+  }
 }
 void CPU::execBGE(const Instr& instr) {
-  if (static_cast<int32_t>(regs[instr.rs1]) >= static_cast<int32_t>(regs[instr.rs2]))
+  if (static_cast<int32_t>(regs[instr.rs1]) >= static_cast<int32_t>(regs[instr.rs2])) {
     pc += instr.imm;
+  } else {
+    pc += 4;
+  }
 }
 void CPU::execBLTU(const Instr& instr) {
-  if (regs[instr.rs1] < regs[instr.rs2]) pc += instr.imm;
+  if (regs[instr.rs1] < regs[instr.rs2]) {
+    pc += instr.imm;
+  } else {
+    pc += 4;
+  }
 }
 void CPU::execBGEU(const Instr& instr) {
-  if (regs[instr.rs1] >= regs[instr.rs2]) pc += instr.imm;
+  if (regs[instr.rs1] >= regs[instr.rs2]) {
+    pc += instr.imm;
+  } else {
+    pc += 4;
+  }
 }
 
-void CPU::execLUI(const Instr& instr) { regs[instr.rd] = instr.imm << 12; }
-void CPU::execAUIPC(const Instr& instr) { regs[instr.rd] = pc + (instr.imm << 12); }
+void CPU::execLUI(const Instr& instr) {
+  regs[instr.rd] = instr.imm << 12;
+  pc += 4;
+}
+void CPU::execAUIPC(const Instr& instr) {
+  regs[instr.rd] = pc + (instr.imm << 12);
+  pc += 4;
+}
 
 void CPU::execJAL(const Instr& instr) {
   regs[instr.rd] = pc + 4;
