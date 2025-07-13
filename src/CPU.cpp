@@ -96,12 +96,14 @@ CPU::CPU()
       regs(std::make_unique<uint32_t[]>(NUM_REGS)),
       mem(std::make_unique<unsigned char[]>(MEM_SIZE)) {
   mem.get()[3] = 0x80;
-  mem.get()[2] = 0x83;
-  mem.get()[1] = 0xa0;
-  mem.get()[0] = 0x23;
+  mem.get()[2] = 0x00;
+  mem.get()[1] = 0xd9;
+  mem.get()[0] = 0x03;
 
-  regs[7] = 0x00000800;
-  regs[8] = 0x88888888;
+  regs[1] = 0x00601000;
+
+  mem.get()[0x00601000 - 2047] = 0xBA;
+  mem.get()[0x00601000 - 2048] = 0xBE;
 }
 
 uint32_t makeInstrKey(const uint32_t& instr) {
@@ -229,8 +231,15 @@ void CPU::execLW(const Instr& instr) {
   regs[instr.rd] = *reinterpret_cast<const uint32_t*>(mem.get() + addr);
 }
 
-void CPU::execLBU(const Instr& instr) { std::cout << "LBU" << std::endl; }
-void CPU::execLHU(const Instr& instr) { std::cout << "LHU" << std::endl; }
+void CPU::execLBU(const Instr& instr) {
+  uint32_t addr = regs[instr.rs1] + instr.imm;
+  regs[instr.rd] = *reinterpret_cast<const uint32_t*>(mem.get() + addr) & BYTE_MASK;
+}
+
+void CPU::execLHU(const Instr& instr) {
+  uint32_t addr = regs[instr.rs1] + instr.imm;
+  regs[instr.rd] = *reinterpret_cast<const uint32_t*>(mem.get() + addr) & HALF_MASK;
+}
 
 void CPU::execSB(const Instr& instr) {
   uint32_t addr = regs[instr.rs1] + instr.imm;
