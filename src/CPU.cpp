@@ -13,7 +13,7 @@ const uint8_t FUNCT3_MASK = 0x7;
 
 const uint8_t RTYPE_OPCODE = 0x33;
 const uint8_t ITYPE_OPCODE1 = 0x13;
-const uint8_t ITYPE_OPCODE2 = 0x67;
+const uint8_t ITYPE_OPCODE2 = 0x3;
 const uint8_t STYPE_OPCODE = 0x23;
 const uint8_t UTYPE_OPCODE1 = 0x37;
 const uint8_t UTYPE_OPCODE2 = 0x17;
@@ -93,11 +93,14 @@ CPU::CPU()
   mem.get()[3] = 0x00;
   mem.get()[2] = 0x00;
   mem.get()[1] = 0x82;
-  mem.get()[0] = 0x03;
+  mem.get()[0] = 0x83;
 
-  // regs[0] = 4;
-  // regs[1] = 0x00100004;
-  // mem.get()[0x00100004] = 0x80;
+  regs[1] = 0x00100004;
+
+  // mem.get()[0x400803] = 0xFF;
+  // mem.get()[0x400802] = 0xFF;
+  // mem.get()[0x400801] = 0xFF;
+  mem.get()[0x00100004] = 0x80;
 }
 
 uint32_t makeInstrKey(const uint32_t& instr) {
@@ -204,22 +207,26 @@ void CPU::execSRAI(const Instr& instr) {
   regs[instr.rd] = static_cast<int32_t>(regs[instr.rs1]) >> (instr.imm & REG_MASK);
 }
 
+// BUGGY AND UNTESTED
 void CPU::execLB(const Instr& instr) {
-  // regs[instr.rd] = static_cast<int32_t>(
-  //     static_cast<int32_t>(mem[static_cast<int32_t>(regs[instr.rs1]) + instr.offset])
-  //     & static_cast<int32_t>(LB_MASK));
-  regs[instr.rd] = mem[regs[instr.rs1] + instr.imm] & LB_MASK;
+  uint32_t addr = regs[instr.rs1] + instr.imm;
+  regs[instr.rd]
+      = (int32_t)((int16_t)(*reinterpret_cast<const uint32_t*>(mem.get() + addr) & LB_MASK));
+  std::cout << std::hex << regs[instr.rd] << std::endl;
 }
 
+// BUGGY AND UNTESTED
 void CPU::execLH(const Instr& instr) {
-  // regs[instr.rd] = static_cast<uint32_t>(mem[regs[instr.rs1] + instr.imm] & LH_MASK);
-  std::cout << "LH" << std::endl;
+  uint32_t addr = regs[instr.rs1] + instr.imm;
+  regs[instr.rd]
+      = (int32_t)((int16_t)(*reinterpret_cast<const uint32_t*>(mem.get() + addr) & LH_MASK));
+
+  std::cout << std::hex << regs[instr.rd] << std::endl;
 }
 
 void CPU::execLW(const Instr& instr) {
-  // regs[instr.rd] = mem[regs[instr.rs1] + instr.imm];
-  std::cout << "get here" << std::endl;
-  regs[instr.rd] = *reinterpret_cast<const int32_t*>(mem.get() + (regs[instr.rs1] + instr.imm));
+  uint32_t addr = regs[instr.rs1] + instr.imm;
+  regs[instr.rd] = *reinterpret_cast<const uint32_t*>(mem.get() + addr);
 }
 
 void CPU::execLBU(const Instr& instr) { std::cout << "LBU" << std::endl; }
@@ -240,6 +247,8 @@ void CPU::execLUI(const Instr& instr) { regs[instr.rd] = instr.imm << 12; }
 void CPU::execAUIPC(const Instr& instr) { regs[instr.rd] = pc + (instr.imm << 12); }
 
 void CPU::execJAL(const Instr& instr) { std::cout << "JAL" << std::endl; }
+
+// WHEN YOU GET TO THIS, IMMEDIATE WILL BE OFF
 void CPU::execJALR(const Instr& instr) { std::cout << "JALR" << std::endl; }
 
 void CPU::execE(const Instr& instr) { (instr.rs2) ? execEBREAK(instr) : execECALL(instr); }
