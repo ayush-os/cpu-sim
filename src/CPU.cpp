@@ -14,10 +14,12 @@ const uint8_t FUNCT3_MASK = 0x7;
 const uint8_t RTYPE_OPCODE = 0x33;
 const uint8_t ITYPE_OPCODE1 = 0x13;
 const uint8_t ITYPE_OPCODE2 = 0x3;
+const uint8_t ITYPE_OPCODE3 = 0x67;
 const uint8_t STYPE_OPCODE = 0x23;
 const uint8_t UTYPE_OPCODE1 = 0x37;
 const uint8_t UTYPE_OPCODE2 = 0x17;
 const uint8_t BTYPE_OPCODE = 0x63;
+const uint8_t JTYPE_OPCODE = 0x6F;
 
 const uint8_t REG_MASK = 0x1F;
 
@@ -35,12 +37,21 @@ const uint8_t O2_SHIFT = 7;
 const uint8_t O2_MASK = 0x1f;
 const uint8_t DIFF_32_12 = 20;
 const uint8_t DIFF_32_13 = 19;
+const uint8_t DIFF_32_21 = 11;
 const uint8_t O3_SHIFT = 4;
 
 const int B_O1_MASK = 0x80000000;
 const int B_O2_MASK = 0x00000080;
 const int B_O3_MASK = 0x7E000000;
 const int B_O4_MASK = 0x00000F00;
+
+const int J_O1_MASK = 0x80000000;
+const int J_O2_MASK = 0x000FF000;
+const int J_O3_MASK = 0x00100000;
+const int J_O4_MASK = 0x7FE00000;
+const uint8_t J_O1_SHIFT = 11;
+const uint8_t J_O3_SHIFT = 9;
+const uint8_t J_O4_SHIFT = 20;
 
 using ExecFunc = void (CPU::*)(const Instr&);
 
@@ -104,12 +115,9 @@ CPU::CPU()
       regs(std::make_unique<uint32_t[]>(NUM_REGS)),
       mem(std::make_unique<unsigned char[]>(MEM_SIZE)) {
   mem.get()[3] = 0x00;
-  mem.get()[2] = 0x20;
-  mem.get()[1] = 0xE6;
-  mem.get()[0] = 0x63;
-
-  regs[1] = 0x80000000;
-  regs[2] = 0x7FFFFFFF;
+  mem.get()[2] = 0x00;
+  mem.get()[1] = 0x00;
+  mem.get()[0] = 0x00;
 }
 
 uint32_t makeInstrKey(const uint32_t& instr) {
@@ -119,6 +127,8 @@ uint32_t makeInstrKey(const uint32_t& instr) {
 
   if (opcode == RTYPE_OPCODE) {
     return (opcode << 24) | (funct3 << 12) | (funct7 << 0);
+  } else if (opcode == JTYPE_OPCODE) {
+    return (opcode << 24);
   } else {
     return (opcode << 24) | (funct3 << 12);
   }
@@ -134,7 +144,7 @@ Instr extractFields(const uint32_t& instr) {
 
   uint8_t opcode = instr & OPCODE_MASK;
 
-  if (opcode == ITYPE_OPCODE1 || opcode == ITYPE_OPCODE2) {
+  if (opcode == ITYPE_OPCODE1 || opcode == ITYPE_OPCODE2 || opcode == ITYPE_OPCODE3) {
     i.imm = static_cast<int32_t>(instr) >> CONST_SHIFT_1;
   } else if (opcode == UTYPE_OPCODE1 || opcode == UTYPE_OPCODE2) {
     i.imm = static_cast<int32_t>(instr) >> CONST_SHIFT_2;
@@ -145,6 +155,10 @@ Instr extractFields(const uint32_t& instr) {
     i.imm = ((instr & B_O1_MASK) >> DIFF_32_13) | ((instr & B_O2_MASK) << O3_SHIFT)
             | ((instr & B_O3_MASK) >> DIFF_32_12) | ((instr & B_O4_MASK) >> O2_SHIFT);
     i.imm = static_cast<int32_t>(i.imm << DIFF_32_13) >> DIFF_32_13;
+  } else if (opcode == JTYPE_OPCODE) {
+    i.imm = ((instr & J_O1_MASK) >> J_O1_SHIFT) | (instr & J_O2_MASK)
+            | ((instr & J_O3_MASK) >> J_O3_SHIFT) | ((instr & J_O4_MASK) >> J_O4_SHIFT);
+    i.imm = static_cast<int32_t>(i.imm << DIFF_32_21) >> DIFF_32_21;
   }
 
   return i;
@@ -292,10 +306,16 @@ void CPU::execBGEU(const Instr& instr) {
 void CPU::execLUI(const Instr& instr) { regs[instr.rd] = instr.imm << 12; }
 void CPU::execAUIPC(const Instr& instr) { regs[instr.rd] = pc + (instr.imm << 12); }
 
-void CPU::execJAL(const Instr& instr) { std::cout << "JAL" << std::endl; }
+void CPU::execJAL(const Instr& instr) {
+  regs[instr.rd] = pc + 4;
+  pc += instr.imm;
+}
 
-// WHEN YOU GET TO THIS, IMMEDIATE WILL BE OFF
-void CPU::execJALR(const Instr& instr) { std::cout << "JALR" << std::endl; }
+void CPU::execJALR(const Instr& instr) {
+  uint32_t t = pc + 4;
+  pc = (regs[instr.rs1] + instr.imm) & ~1;
+  regs[instr.rd] = t;
+}
 
 void CPU::execE(const Instr& instr) { (instr.rs2) ? execEBREAK(instr) : execECALL(instr); }
 void CPU::execECALL(const Instr& instr) { std::cout << "ECALL" << std::endl; }
