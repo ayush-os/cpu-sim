@@ -9,7 +9,6 @@ struct Instr {
   uint8_t funct7;
   uint8_t funct3;
   int32_t imm;
-  int32_t offset;
 };
 
 class CPU {

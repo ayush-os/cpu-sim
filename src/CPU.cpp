@@ -91,9 +91,9 @@ CPU::CPU()
       regs(std::make_unique<uint32_t[]>(NUM_REGS)),
       mem(std::make_unique<unsigned char[]>(MEM_SIZE)) {
   mem.get()[3] = 0x00;
-  mem.get()[2] = 0x10;
-  mem.get()[1] = 0x00;
-  mem.get()[0] = 0x73;
+  mem.get()[2] = 0x00;
+  mem.get()[1] = 0x82;
+  mem.get()[0] = 0x03;
 
   // regs[0] = 4;
   // regs[1] = 0x00100004;
@@ -127,10 +127,6 @@ Instr extractFields(const uint32_t& instr) {
   } else if (opcode == UTYPE_OPCODE1 || opcode == UTYPE_OPCODE2) {
     i.imm = static_cast<int32_t>(instr) >> CONST_SHIFT_2;
   }
-  // else if (opcode == STYPE_OPCODE) {
-  //   i.offset = ((instr >> 25) << 5) | ((instr >> 7) & 0x1F);
-  //   i.offset = static_cast<int32_t>(i.offset << 20) >> 20;  // Sign extend
-  // }
 
   return i;
 }
@@ -209,20 +205,21 @@ void CPU::execSRAI(const Instr& instr) {
 }
 
 void CPU::execLB(const Instr& instr) {
-  regs[instr.rd] = static_cast<int32_t>(
-      static_cast<int32_t>(mem[static_cast<int32_t>(regs[instr.rs1]) + instr.offset])
-      & static_cast<int32_t>(LB_MASK));
-  std::cout << std::hex << static_cast<int32_t>(regs[instr.rd]) << std::endl;
+  // regs[instr.rd] = static_cast<int32_t>(
+  //     static_cast<int32_t>(mem[static_cast<int32_t>(regs[instr.rs1]) + instr.offset])
+  //     & static_cast<int32_t>(LB_MASK));
+  regs[instr.rd] = mem[regs[instr.rs1] + instr.imm] & LB_MASK;
 }
 
 void CPU::execLH(const Instr& instr) {
-  regs[instr.rd] = static_cast<uint32_t>(mem[regs[instr.rs1] + instr.offset] & LH_MASK);
-  std::cout << regs[instr.rd] << std::endl;
+  // regs[instr.rd] = static_cast<uint32_t>(mem[regs[instr.rs1] + instr.imm] & LH_MASK);
+  std::cout << "LH" << std::endl;
 }
 
 void CPU::execLW(const Instr& instr) {
-  regs[instr.rd] = static_cast<uint32_t>(mem[regs[instr.rs1] + instr.offset]);
-  std::cout << regs[instr.rd] << std::endl;
+  // regs[instr.rd] = mem[regs[instr.rs1] + instr.imm];
+  std::cout << "get here" << std::endl;
+  regs[instr.rd] = *reinterpret_cast<const int32_t*>(mem.get() + (regs[instr.rs1] + instr.imm));
 }
 
 void CPU::execLBU(const Instr& instr) { std::cout << "LBU" << std::endl; }
