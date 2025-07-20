@@ -1,11 +1,14 @@
 #include "../include/cpusim/CPU.h"
 
+#include <fstream>
 #include <iostream>
 
 const int NUM_REGS = 32;
 const int MEM_SIZE = 16 * 1024 * 1024;  // 1024 bytes = 1 kb -> 1024 KB = 1 MB -> 16 * 1 MB = 16 MB
 
 const int IO = 0xFFFF0000;
+const int CODE_SEGMENT_LOWER = 0x00000000;
+const int CODE_SEGMENT_UPPER = 0x00200000;
 
 const uint8_t OPCODE_MASK = 0x7f;
 const uint8_t FUNCT7_SHIFT = 0x19;
@@ -116,20 +119,20 @@ CPU::CPU()
     : pc(0),
       regs(std::make_unique<uint32_t[]>(NUM_REGS)),
       mem(std::make_unique<unsigned char[]>(MEM_SIZE)) {
-  mem.get()[0x7] = 0x00;
-  mem.get()[0x6] = 0x00;
-  mem.get()[0x5] = 0x00;
-  mem.get()[0x4] = 0x73;
+  const char* filename = "tests/two.bin";
 
-  mem.get()[0x3] = 0x00;
-  mem.get()[0x2] = 0x53;
-  mem.get()[0x1] = 0x20;
-  mem.get()[0x0] = 0x23;
+  std::ifstream file(filename, std::ios::binary | std::ios::ate);
 
-  // regs.get()[1] = 0x41;
-  // regs.get()[17] = 93;
-  regs[5] = 0x65626142;
-  regs[6] = 0xFFFF0000;
+  if (!file.is_open()) std::cerr << "Error: Could not open file " << filename << std::endl;
+
+  std::streampos file_size = file.tellg();
+  file.seekg(0, std::ios::beg);
+  if (file.read(reinterpret_cast<char*>(mem.get()), file_size)) {
+    std::cout << "Successfully read " << file_size << " bytes from " << filename << std::endl;
+  } else {
+    std::cerr << "Error: Could not read file " << filename << std::endl;
+  }
+  file.close();
 }
 
 uint32_t makeInstrKey(const uint32_t& instr) {
@@ -185,6 +188,7 @@ void CPU::decode(const uint32_t& instr) {
     std::invoke(it->second, *this, i);
   } else {
     std::cerr << "Unknown instruction: 0x" << std::hex << instr << std::endl;
+    exit(1);
   }
 }
 
