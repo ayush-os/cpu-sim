@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-const int NUM_REGS = 32;
+const int BIT_SIZE = 32;
 const int MEM_SIZE = 16 * 1024 * 1024;  // 1024 bytes = 1 kb -> 1024 KB = 1 MB -> 16 * 1 MB = 16 MB
 
 const int IO = 0xFFFF0000;
@@ -64,6 +64,14 @@ std::unordered_map<uint32_t, ExecFunc> instruction_map = {
     // R-type
     {0x33000000, &CPU::execADD},
     {0x33000020, &CPU::execSUB},
+    {0x33000001, &CPU::execMUL},
+    {0x33001001, &CPU::execMULH},
+    {0x33002001, &CPU::execMULHSU},
+    {0x33003001, &CPU::execMULHU},
+    {0x33004001, &CPU::execDIV},
+    {0x33005001, &CPU::execDIVU},
+    {0x33006001, &CPU::execREM},
+    {0x33007001, &CPU::execREMU},
     {0x33001000, &CPU::execSLL},
     {0x33002000, &CPU::execSLT},
     {0x33005000, &CPU::execSRL},
@@ -117,9 +125,9 @@ std::unordered_map<uint32_t, ExecFunc> instruction_map = {
 
 CPU::CPU()
     : pc(0),
-      regs(std::make_unique<uint32_t[]>(NUM_REGS)),
+      regs(std::make_unique<uint32_t[]>(BIT_SIZE)),
       mem(std::make_unique<unsigned char[]>(MEM_SIZE)) {
-  const char* filename = "tests/two.bin";
+  const char* filename = "tests_x/mul.bin";
 
   std::ifstream file(filename, std::ios::binary | std::ios::ate);
 
@@ -236,6 +244,62 @@ void CPU::execSRL(const Instr& instr) {
 
 void CPU::execADD(const Instr& instr) {
   regs[instr.rd] = regs[instr.rs1] + regs[instr.rs2];
+  pc += 4;
+}
+
+void CPU::execMUL(const Instr& instr) {
+  regs[instr.rd] = (int64_t)(int32_t)regs[instr.rs1] * (int32_t)regs[instr.rs2];
+  pc += 4;
+}
+
+void CPU::execMULH(const Instr& instr) {
+  regs[instr.rd] = ((int64_t)(int32_t)regs[instr.rs1] * (int32_t)regs[instr.rs2]) >> BIT_SIZE;
+  pc += 4;
+}
+
+void CPU::execMULHSU(const Instr& instr) {
+  regs[instr.rd] = ((int64_t)(int32_t)regs[instr.rs1] * regs[instr.rs2]) >> BIT_SIZE;
+  pc += 4;
+}
+
+void CPU::execMULHU(const Instr& instr) {
+  regs[instr.rd] = ((uint64_t)regs[instr.rs1] * regs[instr.rs2]) >> BIT_SIZE;
+  pc += 4;
+}
+
+void CPU::execDIV(const Instr& instr) {
+  if (instr.rs2 != 0) {
+    regs[instr.rd] = (int32_t)regs[instr.rs1] / (int32_t)regs[instr.rs2];
+  } else {
+    regs[instr.rd] = 0xFFFFFFFF;
+  }
+  pc += 4;
+}
+
+void CPU::execDIVU(const Instr& instr) {
+  if (instr.rs2) {
+    regs[instr.rd] = regs[instr.rs1] / regs[instr.rs2];
+  } else {
+    regs[instr.rd] = 0xFFFFFFFF;
+  }
+  pc += 4;
+}
+
+void CPU::execREM(const Instr& instr) {
+  if (instr.rs2) {
+    regs[instr.rd] = (int32_t)regs[instr.rs1] % (int32_t)regs[instr.rs2];
+  } else {
+    regs[instr.rd] = regs[instr.rs1];
+  }
+  pc += 4;
+}
+
+void CPU::execREMU(const Instr& instr) {
+  if (instr.rs2) {
+    regs[instr.rd] = regs[instr.rs1] % regs[instr.rs2];
+  } else {
+    regs[instr.rd] = regs[instr.rs1];
+  }
   pc += 4;
 }
 

@@ -32,6 +32,14 @@ public:
   void execOR(const Instr& instr);
   void execAND(const Instr& instr);
   void execADD(const Instr& instr);
+  void execMUL(const Instr& instr);
+  void execMULH(const Instr& instr);
+  void execMULHSU(const Instr& instr);
+  void execMULHU(const Instr& instr);
+  void execDIV(const Instr& instr);
+  void execDIVU(const Instr& instr);
+  void execREM(const Instr& instr);
+  void execREMU(const Instr& instr);
   void execSRL(const Instr& instr);
   void execSUB(const Instr& instr);
 
