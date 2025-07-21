@@ -1,0 +1,18 @@
+.globl _start
+_start:
+    addi x1, x0, 5
+    lui x30, 0xFFFF0
+    addi x30, x30, 0x000
+outer_loop:
+    beq x1, x0, end
+    addi x2, x1, 0
+    addi x1, x1, -1
+    jal x3, inner_loop
+inner_loop:
+    beq x2, x0, outer_loop
+    sb x2, 0(x30)
+    addi x2, x2, -1
+    jal x3, inner_loop
+end:
+    li a7, 93
+    ecall

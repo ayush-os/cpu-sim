@@ -1,0 +1,14 @@
+.globl _start
+_start:
+    lui x30, 0xFFFF0
+    addi x30, x30, 0x000
+    addi x1, x0, 7
+    addi x2, x0, 21
+    mv x3, x1
+    bge x1, x2, end
+label0:
+    mv x3, x2
+end:
+    sb x3, 0(x30)
+    li a7, 93
+    ecall

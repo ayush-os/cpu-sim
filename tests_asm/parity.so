@@ -1,0 +1,9 @@
+.globl _start
+_start:
+    lui x30, 0xFFFF0
+    addi x30, x30, 0x000
+    addi x1, x0, 2
+    andi x1, x1, 0x1
+    sb x1, 0(x30)
+    li a7, 93
+    ecall

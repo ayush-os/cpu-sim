@@ -1,0 +1,29 @@
+.globl _start
+_start:
+    lui x30, 0xFFFF0
+    addi x30, x30, 0x000
+    addi x1, x0, 1
+factorial:
+    addi x2, x0, 5
+loop:
+    beq x2, x0, end
+    mv x3, x1
+    mv x4, x2
+    jal x31, mult
+    addi x2, x2, -1
+    jal x29, loop
+mult:
+    mv x5, x3
+    mv x6, x0
+    beqz x4, mult_done
+add_loop:
+    add x3, x3, x5
+    addi x4, x4, -1
+    bnez x4, add_loop    
+mult_done:
+    mv x3, x1
+    jalr x29, x31, 0
+end:
+    sb x1, 0(x30)
+    li a7, 93
+    ecall

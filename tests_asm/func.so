@@ -1,0 +1,16 @@
+.globl _start
+_start:
+    lui x30, 0xFFFF0
+    addi x30, x30, 0x000
+    addi x1, x0, 6
+    addi x2, x0, 10
+    jal x4, sum
+    slli x3, x3, 1
+    jal x31, end 
+sum:
+    add x3, x2, x1
+    jalr x29, x4, 0
+end:
+    sb x3, 0(x30)
+    li a7, 93
+    ecall

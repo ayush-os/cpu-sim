@@ -1,0 +1,82 @@
+.globl _start
+_start:
+    li x1, 15
+    li x2, 10
+    li x3, -5
+    li x4, 0x80000000
+    li x5, 0x7FFFFFFF
+    li x6, 0xFFFFFFFF
+    li x7, 0
+    
+    
+    mul x8, x1, x2   
+    mul x9, x1, x3   
+    mul x10, x3, x3  
+    mul x11, x1, x7  
+    mul x12, x5, x2  
+    
+    
+    mulh x13, x1, x2    
+    mulh x14, x5, x5    
+    mulh x15, x4, x4    
+    mulh x16, x5, x3    
+    mulh x17, x6, x6    
+    
+    
+    mulhsu x18, x1, x2  
+    mulhsu x19, x3, x2  
+    mulhsu x20, x4, x6  
+    mulhsu x21, x5, x6  
+    
+    
+    mulhu x22, x1, x2   
+    mulhu x23, x6, x6   
+    mulhu x24, x4, x6   
+    mulhu x25, x5, x2   
+    
+    
+    div x26, x1, x2     
+    div x27, x1, x3     
+    div x28, x3, x1     
+    div x29, x4, x6     
+    div x30, x1, x0     
+    div x31, x6, x2     
+    
+    
+    li x8, -15       
+    li x9, 100       
+    li x10, 7        
+    
+    
+    divu x11, x1, x2    
+    divu x12, x9, x10   
+    divu x13, x6, x2    
+    divu x14, x1, x0    
+    divu x15, x4, x2    
+    
+    
+    rem x16, x1, x2     
+    rem x17, x1, x3     
+    rem x18, x8, x2     
+    rem x19, x1, x7     
+    rem x20, x4, x6     
+    rem x21, x9, x10    
+    
+    
+    remu x22, x1, x2    
+    remu x23, x9, x10   
+    remu x24, x6, x2    
+    remu x25, x1, x7    
+    remu x26, x4, x10   
+    
+    
+    li x27, 1
+    li x28, 0x80000001  
+    
+    
+    div x29, x4, x27    
+    rem x30, x4, x27    
+    div x31, x28, x3    
+    li a7, 93
+
+    ecall
